@@ -1,0 +1,551 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_GRAFANA-POSTGRESQL-DATASOURCE",
+      "label": "grafana-postgresql-datasource",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "grafana-postgresql-datasource",
+      "pluginName": "PostgreSQL"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "12.4.1"
+    },
+    {
+      "type": "datasource",
+      "id": "grafana-postgresql-datasource",
+      "name": "PostgreSQL",
+      "version": "12.4.1"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "text",
+      "name": "Text",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": false,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Associate Management ",
+      "tooltip": "",
+      "type": "link",
+      "url": "http://localhost:9033/login"
+    }
+  ],
+  "panels": [
+    {
+      "gridPos": {
+        "h": 12,
+        "w": 4,
+        "x": 0,
+        "y": 0
+      },
+      "id": 6,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"display:flex; flex-direction:column; gap:12px;\">\n  <a href=\"/d/adj46vq/1-overview-template?kiosk\">Overview</a>\n  <a href=\"/d/adj4qvf/2-dock-analytics-template?kiosk\">Dock Analytics</a>\n  <a href=\"/d/adgvnth/3-cart-analytics-template?kiosk\">Cart Analytics</a>\n  <a href=\"/d/adtnqk5/4-associate-analytics-template?kiosk\">Associate Analytics</a>\n  <a href=\"/d/adkghdr/5-robot-analytics-template?kiosk\">Robot Analytics</a>\n  <a href=\"/d/ad8pptk/6-events-and-exceptions?kiosk\">Events and Exceptions </a>\n  <a href=\"/d/admjsfm/7-routing-and-fulfillment?kiosk\">Routing and Fulfillment </a>\n</div>\n",
+        "mode": "markdown"
+      },
+      "pluginVersion": "12.4.1",
+      "title": "Navigation Panel",
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "grafana-postgresql-datasource"
+      },
+      "description": "Number of associates currently logged in and active in the facility.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-blue",
+                "value": 0
+              },
+              {
+                "color": "semi-dark-red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 10,
+        "x": 4,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "dataset": "destro_yusen_db",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "grafana-postgresql-datasource"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS active_associates\r\nFROM destro_associates.associates\r\nWHERE is_active = true\r\n  AND UPPER(first_name) != 'ADMIN'\r\n  AND UPPER(last_name) != 'ADMIN'\r\n  AND LENGTH(associate_id) < 36;\r\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Total Associates Active",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "grafana-postgresql-datasource"
+      },
+      "description": "Total number of runner trips completed by all associates within the selected time window.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-blue",
+                "value": 0
+              },
+              {
+                "color": "semi-dark-red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 10,
+        "x": 14,
+        "y": 0
+      },
+      "id": 12,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "dataset": "destro_yusen_db",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "grafana-postgresql-datasource"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(trips) AS total_trips\nFROM (\n  SELECT DISTINCT ON (rt.associate_id)\n    rt.associate_id, rt.trips\n  FROM destro_core.runner_trips rt\n  JOIN destro_associates.associates a ON a.associate_id = rt.associate_id\n  WHERE $__timeFilter(rt.recorded_at)\n    AND UPPER(a.first_name) != 'ADMIN'\n    AND UPPER(a.last_name) != 'ADMIN'\n    AND LENGTH(a.associate_id) < 36\n  ORDER BY rt.associate_id, rt.recorded_at DESC\n) latest;\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Total Manual Runner Trips",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "grafana-postgresql-datasource"
+      },
+      "description": "List of all associates with their current status and activity totals for the selected time window.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 20,
+        "x": 4,
+        "y": 7
+      },
+      "id": 5,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "dataset": "destro_yusen_db",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "grafana-postgresql-datasource"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n    a.associate_id AS \"Associate ID\",\r\n    a.first_name AS \"First Name\",\r\n    a.last_name AS \"Last Name\",\r\n    CASE WHEN a.is_active THEN 'Active' ELSE 'Deactivated' END AS \"Account\",\r\n    CASE\r\n      WHEN last_session.event_type = 'Login' THEN 'Online'\r\n      ELSE 'Offline'\r\n    END AS \"Status\",\r\n    COALESCE(unload.total, 0) AS \"No. of Carts Unloaded\",\r\n    COALESCE(runs.total, 0) AS \"No. of Runner Trips\",\r\n    COALESCE(load.total, 0) AS \"No. of Carts Loaded\"\r\nFROM destro_associates.associates a\r\nLEFT JOIN (\r\n    SELECT DISTINCT ON (associate_id)\r\n      associate_id, event_type\r\n    FROM destro_core.associate_sessions\r\n    ORDER BY associate_id, recorded_at DESC\r\n) last_session ON last_session.associate_id = a.associate_id\r\nLEFT JOIN (\r\n    SELECT DISTINCT ON (associate_id) associate_id, trips AS total\r\n    FROM destro_core.runner_trips\r\n    WHERE $__timeFilter(recorded_at)\r\n    ORDER BY associate_id, recorded_at DESC\r\n) runs ON runs.associate_id = a.associate_id\r\nLEFT JOIN (\r\n    SELECT associate_id, COUNT(*) AS total\r\n    FROM destro_core.associate_cart_moves\r\n    WHERE $__timeFilter(recorded_at)\r\n      AND action_type = 'Unload'\r\n    GROUP BY associate_id\r\n) unload ON unload.associate_id = a.associate_id\r\nLEFT JOIN (\r\n    SELECT associate_id, COUNT(*) AS total\r\n    FROM destro_core.associate_cart_moves\r\n    WHERE $__timeFilter(recorded_at)\r\n      AND action_type = 'Load'\r\n    GROUP BY associate_id\r\n) load ON load.associate_id = a.associate_id\r\nWHERE UPPER(a.first_name) != 'ADMIN'\r\n  AND UPPER(a.last_name) != 'ADMIN'\r\n  AND LENGTH(a.associate_id) < 36\r\nORDER BY a.first_name;\r\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Associate List",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "grafana-postgresql-datasource"
+      },
+      "description": "Log of every cart move action performed by associates — both inbound unloads and outbound loads — within the selected time window.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 20,
+        "x": 4,
+        "y": 16
+      },
+      "id": 13,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Starting Door"
+          }
+        ]
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "dataset": "destro_yusen_db",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "grafana-postgresql-datasource"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  acm.recorded_at AS \"Timestamp\",\n  acm.associate_id AS \"Associate ID\",\n  acm.cart_id AS \"Cart\",\n  acm.starting_location AS \"Starting Location\",\n  acm.starting_door AS \"Starting Door\",\n  acm.destination AS \"Destination\"\nFROM destro_core.associate_cart_moves acm\nJOIN destro_associates.associates a ON a.associate_id = acm.associate_id\nWHERE $__timeFilter(acm.recorded_at)\n  AND UPPER(a.first_name) != 'ADMIN'\n  AND UPPER(a.last_name) != 'ADMIN'\n  AND LENGTH(a.associate_id) < 36\nORDER BY acm.recorded_at DESC;\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Associate Cart Move History",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "grafana-postgresql-datasource"
+      },
+      "description": "Log of associate login and logout events, showing when each associate started and ended their session.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 20,
+        "x": 4,
+        "y": 24
+      },
+      "id": 10,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "dataset": "destro_yusen_db",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "grafana-postgresql-datasource"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  s.recorded_at AS \"Time\",\n  s.associate_id AS \"Associate ID\",\n  s.event_type AS \"Event\"\nFROM destro_core.associate_sessions s\nJOIN destro_associates.associates a ON a.associate_id = s.associate_id\nWHERE $__timeFilter(s.recorded_at)\n  AND UPPER(a.first_name) != 'ADMIN'\n  AND UPPER(a.last_name) != 'ADMIN'\n  AND LENGTH(a.associate_id) < 36\nORDER BY s.recorded_at DESC;\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Associate Login/Logout History",
+      "type": "table"
+    }
+  ],
+  "preload": false,
+  "schemaVersion": 42,
+  "tags": [
+    "template"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "4.Associate Analytics-template",
+  "uid": "adtnqk5",
+  "version": 4,
+  "weekStart": ""
+}

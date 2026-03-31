@@ -1,0 +1,18 @@
+apiVersion: 1
+
+datasources:
+  - name: TimescaleDB
+    type: grafana-postgresql-datasource
+    uid: grafana-postgresql-datasource
+    version: 2
+    access: proxy
+    url: timescaledb:5432
+    user: destro_grafana
+    secureJsonData:
+      password: destro_pass
+    jsonData:
+      database: destro_yusen_db
+      sslmode: disable
+      postgresVersion: 1500
+      timescaledb: true
+    isDefault: true

@@ -1,0 +1,264 @@
+# version fileas arereemoved cause compose v2.
+
+services:
+  # ------------------timescaledb : need ton add the roles and schemas before i can start using timesacledb_zero_data
+  timescaledb:
+    image: destro/timescaledb_zero:1.0
+    container_name: destro-timescaledb-zero
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      
+    volumes:
+      - timescaledb_zero_data:/var/lib/postgresql/data
+      - ./database_init/01_roles.sql:/docker-entrypoint-initdb.d/01_roles.sql:ro
+      - ./database_init/02_schema.sql:/docker-entrypoint-initdb.d/02_schema.sql:ro
+    restart: always
+    networks:
+      - destro_net
+  # ------------------redis: presistent 
+  redis:
+    image: redis:7
+    container_name: redis
+    command:
+      ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec"]
+    volumes:
+      - redis_zero_data:/data
+
+    restart: always
+    networks:
+      - destro_net
+  # ------------------grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: destro-grafana
+    depends_on:
+      - timescaledb
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GF_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_ADMIN_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_HTTP_PORT=3000
+
+      - GF_SERVER_ROOT_URL=${GRAFANA_ROOT_URL}
+      - GF_SERVER_SERVE_FROM_SUB_PATH=${GRAFANA_SUBPATH}
+      - GF_LOG_LEVEL=error
+      - GF_LOG_MODE=console
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/overview.json
+      # - GF_EXPLORE_ENABLED=false
+      # - GF_ALERTING_ENABLED=false
+
+    volumes:
+      - grafana_zero_data:/var/lib/grafana
+      - ./grafana_facilities/dashboards:/var/lib/grafana/dashboards
+      - ./grafana_facilities/assets:/usr/share/grafana/public/assets
+      - ./grafana_facilities/provisioning:/etc/grafana/provisioning
+    restart: always
+    networks:
+      - destro_net
+  # ------------------nginx
+  nginx:
+    image: nginx:stable
+    container_name: destro-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      # - wearables
+      - grafana
+    volumes:
+      - ./nginx/${NGINX_CONFIG}:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    restart: always
+    networks:
+      - destro_net
+  # ------------------user management
+  user_management:
+    image: ${REGISTRY}/user_management:${VERSION}
+    container_name: destro-admin-ui
+    environment:
+      - DATABASE_URL=${DATABASE_URL_USERMGMT}
+      - WEARABLE_MANAGER_URL=http://wearables:9011
+      - WEARABLE_ZERO_URL=${WEARABLE_ZERO_URL}
+      - TZ=America/Los_Angeles
+
+    depends_on:
+      - timescaledb
+      - wearables
+      - wearable-app-backend
+    networks:
+      - destro_net
+
+  # ------------------core
+  core:
+    image: ${REGISTRY}/core:${VERSION}
+    container_name: destro-core
+    depends_on:
+      # - postgres
+      - timescaledb
+      - redis
+    environment:
+      - TZ=America/Los_Angeles
+      # runtime envs
+      - DATABASE_URL=${DATABASE_URL_RUNTIME}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - LOG_DIR=/app/logs
+      - SERVICE_NAME=core
+      - FMS_MODULE=${FMS_MODULE}
+      - DESTRO_MACHINE_ID=${DESTRO_MACHINE_ID}
+      # runtime secrets
+      - DESTRO_WEBHOOK_URL=${DESTRO_WEBHOOK_URL}
+      - DESTRO_LICENSE=${DESTRO_LICENSE}
+      - DESTRO_LICENSE_PUBKEY=${DESTRO_LICENSE_PUBKEY}
+      # site specific config - no baking
+      - CONFIGS_PATH=${CONFIGS_PATH}
+      - TOTAL_CARTS=${TOTAL_CARTS}
+      - TOTAL_BOTS=${TOTAL_BOTS}
+      - SIM_SPEED=${SIM_SPEED}
+      - SITE_ID=${SITE_ID}
+      - INITIAL_BOT_CHARGE=${INITIAL_BOT_CHARGE}
+      - DESTRO_INBOUND_DOORS=${DESTRO_INBOUND_DOORS}
+      - DESTRO_OUTBOUND_DOORS=${DESTRO_OUTBOUND_DOORS}
+      - OUTBOUND_PRIO=${OUTBOUND_PRIO}
+      - MAINTAIN_PRIO=${MAINTAIN_PRIO}
+      - FALLBACK_PRIO=${FALLBACK_PRIO}
+      - MAX_DOOR_RETRIES=${MAX_DOOR_RETRIES}
+      - RETRY_BASE_PRIO=${RETRY_BASE_PRIO}
+   
+ 
+    volumes:
+      - ./volumes/shared_logs/core:/app/logs
+      - ./license_facilities/license.json:/app/license.json:ro
+      - ./license_facilities/license_verify_key.pem:/app/license_verify_key.pem:ro
+      - ./license_facilities/integrity_manifest.json:/app/integrity_manifest.json:ro
+      - ./license_facilities/integrity_manifest.sig:/app/integrity_manifest.sig:ro
+    user: "1000:1000"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /app/tmp
+    cap_drop:
+      - ALL
+    restart: on-failure
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - destro_net
+   
+
+  # ------------------wearables 
+  #  for local testimg expose 9011. No exposing port in prod
+  wearables:
+    image: ${REGISTRY}/wearables:${VERSION}
+    container_name: destro-wearables
+    depends_on:
+      # - postgres
+      - timescaledb
+      - redis
+      - core
+    environment:
+      - TZ=America/Los_Angeles
+      # runtime envs
+      - DATABASE_URL=${DATABASE_URL_RUNTIME}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - LOG_DIR=/app/logs
+      - SERVICE_NAME=wearables
+      - WEARABLES_HOST=${WEARABLES_HOST}
+      - WEARABLES_PORT=${WEARABLES_PORT}
+      - CONFIGS_PATH=${CONFIGS_PATH}
+      - DESTRO_WEBHOOK_URL=${DESTRO_WEBHOOK_URL}
+      - DESTRO_LICENSE=${DESTRO_LICENSE}
+      - DESTRO_LICENSE_PUBKEY=${DESTRO_LICENSE_PUBKEY}
+      - SITE_ID=${SITE_ID}
+      - DESTRO_MACHINE_ID=${DESTRO_MACHINE_ID}
+      # runtime secrets
+      - JWT_WEARABLES_SECRET=${JWT_WEARABLES_SECRET}
+   
+
+    volumes:
+      - ./volumes/shared_logs/wear:/app/logs
+      - ./volumes/wearable_context:/app/data
+      - ./license_facilities/license.json:/app/license.json:ro
+      - ./license_facilities/license_verify_key.pem:/app/license_verify_key.pem:ro
+      - ./license_facilities/integrity_manifest.json:/app/integrity_manifest.json:ro
+      - ./license_facilities/integrity_manifest.sig:/app/integrity_manifest.sig:ro
+    restart: on-failure
+    networks:
+      - destro_net
+  # ------------------config
+  config:
+    image: ${REGISTRY}/config:${VERSION}
+    container_name: destro-config
+    environment:
+      - TZ=America/Los_Angeles
+      - SERVICE_NAME=config
+      - DATABASE_URL=${DATABASE_URL_RUNTIME}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+      # read-only display vars
+      - VERSION=${VERSION}
+      - REGISTRY=${REGISTRY}
+      - NGINX_CONFIG=${NGINX_CONFIG}
+      - WEARABLES_PORT=${WEARABLES_PORT}
+      - GRAFANA_ROOT_URL=${GRAFANA_ROOT_URL}
+  
+      - FLEET_MODE=${DISPATCHER_MODE}
+      - DISPATCHER_MODE=${DISPATCHER_MODE}
+      - WAREHOUSE_ID=${WAREHOUSE_ID}
+      - DESTRO_MACHINE_ID=${DESTRO_MACHINE_ID}
+      - DESTRO_INBOUND_DOORS=${DESTRO_INBOUND_DOORS}
+      - DESTRO_OUTBOUND_DOORS=${DESTRO_OUTBOUND_DOORS}
+      - FALLBACK_DOORS=${FALLBACK_DOORS}
+
+    depends_on:
+      - timescaledb
+      - redis
+      - core
+
+    restart: always
+    networks:
+      - destro_net
+
+  # ------------------wearable-app-backend (FastAPI backend for the wearable UI)
+  wearable-app-backend:
+    image: destro-zero/wearable-api:0.0.0-negative
+    container_name: destro-wearable-app-backend
+    depends_on:
+      - wearables
+    environment:
+      - TZ=America/Los_Angeles
+      - JWT_SECRET=${JWT_WEARABLES_SECRET}
+      - WEAR_MANAGER_URL=http://wearables:9011
+    restart: on-failure
+    networks:
+      - destro_net
+
+  # ------------------wearable-app-frontend (React frontend + nginx, no host port — behind orchestrator nginx)
+  wearable-app-frontend:
+    image: destro-zero/wearable-web:0.0.0-negative
+    container_name: destro-wearable-app-frontend
+    depends_on:
+      - wearable-app-backend
+    restart: on-failure
+    networks:
+      - destro_net
+
+volumes:
+  timescaledb_zero_data:
+  redis_zero_data:
+  grafana_zero_data:
+  shared_logs:
+  wearable_context:
+  
+
+networks:
+  destro_net:
+    external: True
