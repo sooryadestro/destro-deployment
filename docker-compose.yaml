@@ -236,7 +236,7 @@ services:
 
   # ------------------wearable-app-backend (FastAPI backend for the wearable UI)
   wearable-app-backend:
-    image: destro-zero/wearable-api:1.0.0.negative-stable
+    image: ${REGISTRY}/wearable-api:1.0.0.negative-stable
     container_name: destro-wearable-app-backend
     depends_on:
       - wearables
@@ -251,7 +251,7 @@ services:
 
   # ------------------wearable-app-frontend (React frontend + nginx, no host port — behind orchestrator nginx)
   wearable-app-frontend:
-    image: destro-zero/wearable-web:1.0.0.negative-stable
+    image: ${REGISTRY}/wearable-web:1.0.0.negative-stable
     container_name: destro-wearable-app-frontend
     depends_on:
       - wearable-app-backend
