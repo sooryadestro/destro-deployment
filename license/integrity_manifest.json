@@ -1,0 +1,17 @@
+{
+  "generated_at": "YYYY-MM-DDTHH:MM:SSZ",
+  "manifest_version": 1,
+  "services": {
+    "TEMPLATE_SERVICE_1": {
+      "files": {
+        "TEMPLATE_FILE_PATH_1": "place-holder1",
+        "TEMPLATE_FILE_PATH_2": "place-holder2"
+      }
+    },
+    "TEMPLATE_SERVICE_2": {
+      "files": {
+        "TEMPLATE_FILE_PATH_3": "place-holder3"
+      }
+    }
+  }
+}

@@ -454,7 +454,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT DISTINCT ON (cart_id)\n  cart_id AS \"Cart\",\n  status AS \"Status\",\n  COALESCE(\n    CASE WHEN status = 'In Transit' THEN '--' ELSE location END,\n    '--'\n  ) AS \"Location\",\n  COALESCE(\n    CASE WHEN status = 'In Transit' THEN '--' ELSE door_id END,\n    '--'\n  ) AS \"Door No.\"\nFROM destro_core.cart_status_snapshots\nORDER BY cart_id, recorded_at DESC;\n",
+          "rawSql": "SELECT DISTINCT ON (cart_id)\n  cart_id AS \"Cart\",\n  status AS \"Status\",\n  COALESCE(\n    CASE WHEN status = 'In Transit' THEN 'N/A' ELSE location END,\n    'N/A'\n  ) AS \"Location\",\n  COALESCE(\n    CASE WHEN status = 'In Transit' THEN 'N/A' ELSE door_id END,\n    'N/A'\n  ) AS \"Door No.\"\nFROM destro_core.cart_status_snapshots\nORDER BY cart_id, recorded_at DESC;\n",
           "refId": "A",
           "sql": {
             "columns": [

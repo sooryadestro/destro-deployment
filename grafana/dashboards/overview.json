@@ -249,7 +249,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(SUM(trips), 0) AS total_missions\r\nFROM (\r\n  SELECT DISTINCT ON (robot_id)\r\n    robot_id, trips\r\n  FROM destro_core.robot_trips\r\n  ORDER BY robot_id, recorded_at DESC\r\n) latest;",
+          "rawSql": "SELECT COUNT(*) AS total_missions\nFROM destro_core.robot_trips;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -598,7 +598,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(SUM(max_trips - min_trips), 0) AS total_missions\r\nFROM (\r\n  SELECT robot_id,\r\n    MIN(trips) AS min_trips,\r\n    MAX(trips) AS max_trips\r\n  FROM destro_core.robot_trips\r\n  WHERE $__timeFilter(recorded_at)\r\n  GROUP BY robot_id\r\n) per_robot;",
+          "rawSql": "SELECT COUNT(*) AS total_missions\nFROM destro_core.robot_trips\nWHERE $__timeFilter(recorded_at);",
           "refId": "A",
           "sql": {
             "columns": [
