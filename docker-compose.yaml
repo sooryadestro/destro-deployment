@@ -140,7 +140,7 @@ services:
    
  
     volumes:
-      - ./opt/volumes/core:/app/logs
+      - /opt/volumes/core:/app/logs
       - ./license/license.json:/app/license.json:ro
       - ./license/license_verify_key.pem:/app/license_verify_key.pem:ro
       - ./license/integrity_manifest.json:/app/integrity_manifest.json:ro
@@ -192,8 +192,8 @@ services:
    
 
     volumes:
-      - ./opt/volumes/wear:/app/logs
-      - ./opt/volumes/wearable_context:/app/data
+      - /opt/volumes/wear:/app/logs
+      - /opt/volumes/wearable_context:/app/data
       - ./license/license.json:/app/license.json:ro
       - ./license/license_verify_key.pem:/app/license_verify_key.pem:ro
       - ./license/integrity_manifest.json:/app/integrity_manifest.json:ro
