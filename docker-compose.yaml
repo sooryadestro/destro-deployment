@@ -1,10 +1,12 @@
 # version fileas arereemoved cause compose v2.
 
+
 services:
   # ------------------timescaledb : need ton add the roles and schemas before i can start using timesacledb_zero_data
   timescaledb:
-    image: destro/timescaledb_zero:1.0
+    image: timescale/timescaledb:2.25.0-pg17
     container_name: destro-timescaledb-zero
+
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -31,10 +33,11 @@ services:
       - destro_net
   # ------------------grafana
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:12.4.2
     container_name: destro-grafana
     depends_on:
       - timescaledb
+  
     environment:
       - GF_SECURITY_ADMIN_USER=${GF_ADMIN_USER}
       - GF_SECURITY_ADMIN_PASSWORD=${GF_ADMIN_PASSWORD}
@@ -54,16 +57,17 @@ services:
 
     volumes:
       - grafana_zero_data:/var/lib/grafana
-      - ./grafana_facilities/dashboards:/var/lib/grafana/dashboards
-      - ./grafana_facilities/assets:/usr/share/grafana/public/assets
-      - ./grafana_facilities/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - ./grafana/assets:/usr/share/grafana/public/assets
+      - ./grafana/provisioning:/etc/grafana/provisioning
     restart: always
     networks:
       - destro_net
   # ------------------nginx
   nginx:
-    image: nginx:stable
+    image: nginx:1.28.3-alpine
     container_name: destro-nginx
+
     ports:
       - "80:80"
       - "443:443"
@@ -71,8 +75,8 @@ services:
       # - wearables
       - grafana
     volumes:
-      - ./nginx/${NGINX_CONFIG}:/etc/nginx/nginx.conf:ro
-      - ./nginx/certs:/etc/nginx/certs:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt:/etc/nginx/certs:ro
     restart: always
     networks:
       - destro_net
@@ -80,6 +84,7 @@ services:
   user_management:
     image: ${REGISTRY}/user_management:${VERSION}
     container_name: destro-admin-ui
+
     environment:
       - DATABASE_URL=${DATABASE_URL_USERMGMT}
       - WEARABLE_MANAGER_URL=http://wearables:9011
@@ -97,6 +102,7 @@ services:
   core:
     image: ${REGISTRY}/core:${VERSION}
     container_name: destro-core
+
     depends_on:
       # - postgres
       - timescaledb
@@ -133,10 +139,10 @@ services:
  
     volumes:
       - ./volumes/shared_logs/core:/app/logs
-      - ./license_facilities/license.json:/app/license.json:ro
-      - ./license_facilities/license_verify_key.pem:/app/license_verify_key.pem:ro
-      - ./license_facilities/integrity_manifest.json:/app/integrity_manifest.json:ro
-      - ./license_facilities/integrity_manifest.sig:/app/integrity_manifest.sig:ro
+      - ./license/license.json:/app/license.json:ro
+      - ./license/license_verify_key.pem:/app/license_verify_key.pem:ro
+      - ./license/integrity_manifest.json:/app/integrity_manifest.json:ro
+      - ./license/integrity_manifest.sig:/app/integrity_manifest.sig:ro
     user: "1000:1000"
     read_only: true
     security_opt:
@@ -157,6 +163,7 @@ services:
   wearables:
     image: ${REGISTRY}/wearables:${VERSION}
     container_name: destro-wearables
+ 
     depends_on:
       # - postgres
       - timescaledb
@@ -185,10 +192,10 @@ services:
     volumes:
       - ./volumes/shared_logs/wear:/app/logs
       - ./volumes/wearable_context:/app/data
-      - ./license_facilities/license.json:/app/license.json:ro
-      - ./license_facilities/license_verify_key.pem:/app/license_verify_key.pem:ro
-      - ./license_facilities/integrity_manifest.json:/app/integrity_manifest.json:ro
-      - ./license_facilities/integrity_manifest.sig:/app/integrity_manifest.sig:ro
+      - ./license/license.json:/app/license.json:ro
+      - ./license/license_verify_key.pem:/app/license_verify_key.pem:ro
+      - ./license/integrity_manifest.json:/app/integrity_manifest.json:ro
+      - ./license/integrity_manifest.sig:/app/integrity_manifest.sig:ro
     restart: on-failure
     networks:
       - destro_net
@@ -229,10 +236,11 @@ services:
 
   # ------------------wearable-app-backend (FastAPI backend for the wearable UI)
   wearable-app-backend:
-    image: destro-zero/wearable-api:0.0.0-negative
+    image: destro-zero/wearable-api:1.0.0.negative-stable
     container_name: destro-wearable-app-backend
     depends_on:
       - wearables
+
     environment:
       - TZ=America/Los_Angeles
       - JWT_SECRET=${JWT_WEARABLES_SECRET}
@@ -243,7 +251,7 @@ services:
 
   # ------------------wearable-app-frontend (React frontend + nginx, no host port — behind orchestrator nginx)
   wearable-app-frontend:
-    image: destro-zero/wearable-web:0.0.0-negative
+    image: destro-zero/wearable-web:1.0.0.negative-stable
     container_name: destro-wearable-app-frontend
     depends_on:
       - wearable-app-backend
